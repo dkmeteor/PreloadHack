@@ -115,7 +115,5 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-        System.out.println(drawable);
-
     }
 }
