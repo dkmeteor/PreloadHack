@@ -17,6 +17,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -71,48 +73,49 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void checkPreload(){
-
         Resources resource = getApplicationContext().getResources();
-
+        Object mdrawableCache = null;
         Field field = null;
         try {
-            field = Resources.class.getDeclaredField("sPreloadedDrawables");
+            field = Resources.class.getDeclaredField("mDrawableCache");
         } catch (NoSuchFieldException e) {
             e.printStackTrace();
         }
         field.setAccessible(true);
-
-        LongSparseArray<Drawable.ConstantState>[]    sPreloadedDrawables = null;
         try {
-            sPreloadedDrawables = (LongSparseArray<Drawable.ConstantState>[] )field.get(resource);
+            mdrawableCache = field.get(resource);
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         }
 
-        LongSparseArray<Drawable.ConstantState> l = sPreloadedDrawables[0];
-
-
         TypedValue value = new TypedValue();
         resource.getValue(R.drawable.charming,value,true );
-
 
         long  key = -1;
         if (value.type >= TypedValue.TYPE_FIRST_COLOR_INT
                 && value.type <= TypedValue.TYPE_LAST_COLOR_INT) {
-//            isColorDrawable = true;
-//            caches = mColorDrawableCache;
             key = value.data;
         } else {
-//            isColorDrawable = false;
-//            caches = mDrawableCache;
             key = (((long) value.assetCookie) << 32) | value.data;
         }
 
-//        key = (((long) 1) << 32) | value.data;
+        Method method = null;
+        try {
+            Class  c = mdrawableCache.getClass();
+            method = c.getDeclaredMethod("getInstance",long.class,Resources.Theme.class);
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        }
+        Drawable drawable = null;
+        try {
+            drawable = (Drawable) method.invoke(mdrawableCache, key, null);
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        }
 
-        Drawable drawable  = resource.getDrawable(R.drawable.charming, null);
+        System.out.println(drawable);
 
-        Drawable.ConstantState cs = l.get(key);
-        System.out.println(cs);
     }
 }
